@@ -1,0 +1,10 @@
+FROM python:3.10-slim
+
+RUN python3 -m venv /opt/venv
+
+# Install dependencies:
+COPY python_package_requirements.txt .
+RUN . /opt/venv/bin/activate && pip install -r python_package_requirements.txt
+
+# Run the application:
+COPY packaging/package_model.py .
