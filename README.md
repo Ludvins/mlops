@@ -6,6 +6,10 @@ chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
 ```
 
+```bash
+kind create cluster
+```
+
 # kubectl
 ```bash
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -28,6 +32,7 @@ sudo apt-get install helm
 # install MLflow
 
 ```bash
+helm repo add community-charts https://community-charts.github.io/helm-charts
 helm update
 
 helm install mlflow  community-charts/mlflow -n mlflow --create-namespace -f mlflow/mlflow-values.yaml 

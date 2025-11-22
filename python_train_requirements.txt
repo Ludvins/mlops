@@ -1,6 +1,10 @@
 mlflow
-torch
-torchvision
 datasets
 tqdm
 pandas
+
+# Add PyTorch CUDA wheels from its extra index
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch
+torchvision
+torchaudio

@@ -18,6 +18,12 @@ import torchvision.models as models
 import mlflow
 import mlflow.pytorch
 
+# Check if this variables exists in the environment, else exit code with error
+if "MLFLOW_TRACKING_URI" not in os.environ:
+    raise EnvironmentError("MLFLOW_TRACKING_URI environment variable not set.")
+mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
+mlflow.set_experiment("MLOps_Demo_Experiment")
+
 def export_probs_csv(model, data_loader, device, csv_path, idx_real, idx_fake):
     """
     Run model on data_loader and save a CSV with columns:
@@ -126,6 +132,7 @@ def main():
     # Move model to GPU if available
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
+    print(f"Using device: {device}")
 
     # Define loss function and optimizer (SGD with momentum and weight decay)
     criterion = nn.CrossEntropyLoss()

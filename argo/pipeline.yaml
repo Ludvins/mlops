@@ -1,0 +1,65 @@
+# argo/pipeline.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mlops-demo-
+spec:
+  entrypoint: mlops-pipeline
+  volumes:
+  - name: mlflow-artifacts                            # volume to share artifacts (if needed)
+    emptyDir: {}
+  templates:
+  - name: mlops-pipeline
+    dag:
+      tasks:
+      - name: train-model
+        template: train
+      - name: package-model
+        depends: train-model.Succeeded
+        template: package
+      - name: deploy-model
+        depends: package-model.Succeeded
+        template: deploy
+      - name: monitor-model
+        depends: deploy-model.Succeeded
+        template: monitor
+
+  # Training step
+  - name: train
+    container:
+      image: python:3.10-slim
+      command: ["python", "/app/train.py"]
+      volumeMounts:
+      - name: mlflow-artifacts
+        mountPath: /app/artifacts                 # mount for any artifact sharing
+      env:
+      - name: MLFLOW_TRACKING_URI
+        value: "http://mlflow-service.mlflow.svc.cluster.local:5000"
+      # Assuming train.py is packaged into the image or mounted via ConfigMap
+
+  # Packaging step
+  - name: package
+    container:
+      image: python:3.10-slim
+      command: ["python", "/app/package_model.py"]
+      volumeMounts:
+      - name: mlflow-artifacts
+        mountPath: /app/artifacts
+      env:  # Could pass model info (e.g., MLflow model URI or path)
+      - name: MODEL_RUN_ID
+        value: "{{tasks.train-model.outputs.parameters.mlflow_run_id}}" 
+      # (Alternatively, train step could output the run ID or model path as a parameter)
+
+  # Deployment step (using kubectl in container to apply manifest)
+  - name: deploy
+    container:
+      image: bitnami/kubectl:latest
+      command: ["kubectl", "apply", "-f", "/app/model-deployment.yaml"]
+      # The model-deployment.yaml could be baked into the image or accessed via volume
+
+  # Monitoring step
+  - name: monitor
+    container:
+      image: python:3.10-slim
+      command: ["python", "/app/drift_monitor.py"]
+      # This step might run a one-time drift check or continuous monitoring job

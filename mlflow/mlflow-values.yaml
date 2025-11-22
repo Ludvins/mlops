@@ -1,5 +1,2 @@
-# mlflow/mlflow-values.yaml
-backendStore:
-  defaultSqlitePath: /data/mlflow.sqlite  # Path in container
 service:
   type: NodePort                       # Expose via NodePort for local access
